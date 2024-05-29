@@ -140,12 +140,12 @@ $conn->close();
                 <?php endforeach; ?>
             </div>
     </div>
-                        <!-- Pagination -->
-                        <div class="pagination">
-    <?php for ($i = 1; $i <= $totalPages; $i++) : ?>
-        <a href="?page=<?php echo $i . ($selectedCategory ? '&category=' . $selectedCategory : ''); ?>" <?php if ($i == $page) echo 'class="active"'; ?>><?php echo $i; ?></a>
-    <?php endfor; ?>
-</div>
+
+    <div class="pagination">
+        <?php for ($i = 1; $i <= $totalPages; $i++) : ?>
+            <a href="?page=<?php echo $i . ($selectedCategory ? '&category=' . $selectedCategory : ''); ?>" <?php if ($i == $page) echo 'class="active"'; ?>><?php echo $i; ?></a>
+        <?php endfor; ?>
+    </div>
 
 </body>
 </html>
