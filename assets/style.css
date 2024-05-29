@@ -719,11 +719,12 @@ th {
         height: auto;
         padding: 10px;
         flex: none;
+        z-index:1;
     }
 
     .homeboxmain {
         margin-left: 0;
-        padding-top: 75px; /* Adjust as needed based on the combined height of the top nav and .second-nav */
+        padding-top: 145px; /* Adjust as needed based on the combined height of the top nav and .second-nav */
     }
 
     .container {
@@ -734,5 +735,6 @@ th {
         display:flex;
         justify-content:center;
         align-items:center;
+        z-index:1;
     }
 }
