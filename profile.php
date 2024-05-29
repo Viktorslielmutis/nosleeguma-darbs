@@ -29,6 +29,8 @@ if ($stmt = mysqli_prepare($conn, $sql)) {
     if (mysqli_stmt_execute($stmt)) {
         // Bind result variables
         mysqli_stmt_bind_result($stmt, $product_id, $virsraksts, $teksts ,$cena, $img_url);
+    }
+}
 ?>
 
 <!DOCTYPE html>
@@ -116,7 +118,7 @@ if ($stmt = mysqli_prepare($conn, $sql)) {
                                             </svg>
                                     </a>
                                 </td>
-                                <?echo "</tr>";
+                                <?php echo"</tr>";
                             }
                             ?>
                     </tbody>

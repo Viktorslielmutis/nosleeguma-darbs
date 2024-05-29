@@ -1,9 +1,11 @@
 <?php
 
-$servername = "fdb34.awardspace.net";
-$username = "3931224_glabaatuve";
-$password = "loltop123123123";
-$dbname = "3931224_glabaatuve";
+$env= parse_ini_file('.env');
+
+$servername = $env ["SERVER"];
+$username = $env ["NAME"];
+$password = $env ["PASSWORD"];
+$dbname = $env ["DBNAME"];
 
 $conn = mysqli_connect($servername, $username, $password, $dbname);
 
