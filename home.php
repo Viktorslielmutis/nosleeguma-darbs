@@ -31,9 +31,6 @@ if ($selectedCategory) {
 $page = isset($_GET['page']) ? $_GET['page'] : 1;
 $limit = 8; // Set the number of products you want to display per page
 
-// Calculate total number of pages
-$totalPages = ceil($totalProducts / $limit);
-
 // Calculate offset for pagination
 $offset = ($page - 1) * $limit;
 

@@ -1,25 +1,6 @@
 @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@500&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Roboto&display=swap');
 
-@media (max-width: 768px) {
-    .second-nav {
-        width: 100%;
-        height: auto;
-        position: static;
-        padding: 10px;
-        flex: none;
-    }
-
-    .homeboxmain {
-        margin-left: 0;
-        padding-top: 110px; /* Adjust as needed based on the combined height of the top nav and .second-nav */
-    }
-
-    .container {
-        flex-direction: column;
-        padding-top: 120px; /* Adjust if necessary */
-    }
-}
 body{
     /* overflow:hidden; */
     margin:0;
@@ -52,7 +33,7 @@ body::-webkit-scrollbar {
     display: none; /* For Chrome, Safari, and Opera */
 }
 nav {
-    padding: 18px;
+    /* padding: 18px; */
     text-align: center;
     font-family: 'Roboto', sans-serif;
     position: fixed;
@@ -62,10 +43,10 @@ nav {
     background-color:#64766A;
     text-align: center;
     font-family: 'Roboto', sans-serif;
-    padding: 15px;
+    /* padding: 15px; */
   }
 .navigation-home{
-    /* padding: 18px; */
+    padding: 18px;
     text-align: center;
     font-family: 'Roboto', sans-serif;
     position: fixed;
@@ -83,6 +64,8 @@ nav {
     padding: 10px;
     margin: 0 5px;
     font-size: 20px;
+    position: relative;
+    left: 20px;
   }
   nav a:hover {
     color: black;
@@ -432,6 +415,8 @@ input, select, textarea {
 @media (max-width: 600px) {
     .homebox1 {
         width: 100%; /* On smaller screens, make it full width */
+        position: relative;
+        left: 12px;
     }
 }
 
@@ -724,4 +709,30 @@ th {
     margin-top: 5px;
     display: flex;
     justify-content: center;
+}
+
+
+@media (max-width: 768px) {
+    .second-nav {
+        margin-top:30px;
+        width: 100%;
+        height: auto;
+        padding: 10px;
+        flex: none;
+    }
+
+    .homeboxmain {
+        margin-left: 0;
+        padding-top: 75px; /* Adjust as needed based on the combined height of the top nav and .second-nav */
+    }
+
+    .container {
+        flex-direction: column;
+        padding-top: 120px; /* Adjust if necessary */
+    }
+    .navigation-home{
+        display:flex;
+        justify-content:center;
+        align-items:center;
+    }
 }
