@@ -1,5 +1,4 @@
 <?php
-
 include 'db.php';
 
 // Fetch categories
@@ -19,10 +18,44 @@ if ($selectedCategory) {
     $whereClause = "WHERE pc.category_id = $selectedCategory";
 }
 
+// Define default values for page and limit
+$page = isset($_GET['page']) ? $_GET['page'] : 1;
+$limit = 8; // Set the number of products you want to display per page
+
+// Calculate offset for pagination
+$offset = ($page - 1) * $limit;
+
 // Fetch products based on selected category
 $sql = "SELECT p.* FROM products p
         INNER JOIN product_categories pc ON p.product_id = pc.product_id
         $whereClause";
+$result = $conn->query($sql);
+$products = [];
+if ($result->num_rows > 0) {
+    while($row = $result->fetch_assoc()) {
+        $products[] = $row;
+    }
+}
+
+// Count total number of products
+$sql = "SELECT COUNT(*) AS total FROM products p
+        INNER JOIN product_categories pc ON p.product_id = pc.product_id
+        $whereClause";
+$result = $conn->query($sql);
+$row = $result->fetch_assoc();
+$totalProducts = $row['total'];
+
+// Calculate total number of pages
+$totalPages = ceil($totalProducts / $limit);
+
+// Calculate offset for pagination
+$offset = ($page - 1) * $limit;
+
+// Fetch products based on selected category and pagination
+$sql = "SELECT p.* FROM products p
+        INNER JOIN product_categories pc ON p.product_id = pc.product_id
+        $whereClause
+        LIMIT $limit OFFSET $offset";
 $result = $conn->query($sql);
 $products = [];
 if ($result->num_rows > 0) {
@@ -67,7 +100,7 @@ $conn->close();
                 <input type="text" placeholder="Search...">
                 <button><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" height="12" width="12"><path d="M416 208c0 45.9-14.9 88.3-40 122.7L502.6 457.4c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L330.7 376c-34.4 25.2-76.8 40-122.7 40C93.1 416 0 322.9 0 208S93.1 0 208 0S416 93.1 416 208zM208 352a144 144 0 1 0 0-288 144 144 0 1 0 0 288z"/></svg>
                 </button>
-            </div>
+        </div>
 
             <div class="meklet">Kategorijas:</div>
             <div class="second-nav-inside">
@@ -80,9 +113,7 @@ $conn->close();
                     </a>
                     <?php endforeach; ?>
             </div>
-
-    </div>
-
+                </div>
             <div class="homeboxmain">
                 <?php foreach ($products as $product): ?>
                     <div class="homebox1">
@@ -94,10 +125,18 @@ $conn->close();
                         </div>
                         <div class="homebox-abas-pogas">
                             <a href="product-detail.php?id=<?php echo $product['product_id']; ?>" class="read-more-btn">Apskatiit vairaak</a> <!-- Include product_id in the URL -->
-                            <button class="homebox1-poga">Pirkt</button>
+                            <a href="checkout.php?id=<?php echo $product['product_id']; ?>&cena=<?php echo $product['cena']; ?>&virsraksts=<?php echo urlencode($product['virsraksts']); ?>" class="homebox1-poga">Pirkt</a>
                         </div>
                     </div>
                 <?php endforeach; ?>
             </div>
+    </div>
+
+    <div class="pagination">
+        <?php for ($i = 1; $i <= $totalPages; $i++) : ?>
+            <a href="?page=<?php echo $i . ($selectedCategory ? '&category=' . $selectedCategory : ''); ?>" <?php if ($i == $page) echo 'class="active"'; ?>><?php echo $i; ?></a>
+        <?php endfor; ?>
+    </div>
+
 </body>
 </html>

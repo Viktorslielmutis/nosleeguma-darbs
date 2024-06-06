@@ -1,84 +1,111 @@
 <?php
-include "db.php"; // Using database connection file here
 session_start();
+require_once "db.php";
 
+// Check if the user is logged in, if not then redirect him to the login page
 if (!isset($_SESSION["loggedin"]) || $_SESSION["loggedin"] !== true) {
     header("location: login.php");
     exit;
 }
 
-$id = $_GET['id'];
+$id = $_SESSION["id"];
 
-$qry = mysqli_query($conn,"select * from products where product_id='$id'");
+// Fetch product details from the database
+if (isset($_GET['id'])) {
+    $id = $_GET['id'];
+    $qry = mysqli_query($conn,"SELECT * FROM products WHERE product_id='$id'");
+    if (!$qry) {
+        die("Error in SQL query: " . mysqli_error($conn));
+    }
+    $data = mysqli_fetch_array($qry); // fetch product data
 
-if (!$qry) {
-    die("Error in SQL query: " . mysqli_error($conn));
+    // Fetch selected categories for the product
+    $categoryQry = mysqli_query($conn, "SELECT category_id FROM product_categories WHERE product_id='$id'");
+    $selectedCategories = [];
+    while ($row = mysqli_fetch_assoc($categoryQry)) {
+        $selectedCategories[] = $row['category_id'];
+    }
 }
 
-$data = mysqli_fetch_array($qry); // fetch data
-
-if (!$data) {
-    die("No product found with ID: $id");
+// Function to handle and display errors
+function displayError($errorMessage) {
+    return "<div class='error-message'>$errorMessage</div>";
 }
 
-if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    $virsraksts = $_POST['virsraksts'];
-    $teksts = $_POST['teksts'];
-    $cena = $_POST['cena'];
+// Array to store error messages for each input field
+$errorMessages = array();
 
-    // Handle file upload
-    if(isset($_FILES['Img_URL']) && $_FILES['Img_URL']['error'] === UPLOAD_ERR_OK) {
-        $target_dir = "uploads/";
-        $target_file = $target_dir . basename($_FILES["Img_URL"]["name"]);
-        $uploadOk = 1;
-        $imageFileType = strtolower(pathinfo($target_file, PATHINFO_EXTENSION));
-
-        // Check if file is an actual image
-        $check = getimagesize($_FILES["Img_URL"]["tmp_name"]);
-        if ($check === false) {
-            echo "This file is not an image.";
-            $uploadOk = 0;
-        }
-
-        // Check file size
-        if ($_FILES["Img_URL"]["size"] > 1000000) {
-            echo "Sorry, your file is too large.";
-            $uploadOk = 0;
-        }
-
-        // Allow certain file formats
-        $allowedFormats = array("jpg", "jpeg", "png", "gif");
-        if (!in_array($imageFileType, $allowedFormats)) {
-            echo "Only JPG, JPEG, PNG, and GIF files are allowed.";
-            $uploadOk = 0;
-        }
-
-        // Check if $uploadOk is set to 0 by an error
-        if ($uploadOk == 0) {
-            echo "Sorry, your file was not uploaded.";
-        // If everything is ok, try to upload the file
-        } else {
-            if (move_uploaded_file($_FILES["Img_URL"]["tmp_name"], $target_file)) {
-                // Update the database with new image URL
-                $img_url = $target_file;
-            } else {
-                echo "Sorry, there was an error uploading your file.";
-            }
-        }
-    } else {
-        // No new image uploaded, use the existing image URL
-        $img_url = $data['img_url'];
+if (isset($_POST['submit'])) {
+    // Validate input fields
+    if (empty($_POST['virsraksts'])) {
+        $errorMessages[] = "Lūdzu ievietojiet virsrakstu.";
+    }
+    if (empty($_POST['teksts'])) {
+        $errorMessages[] = "Lūdzu ievietojiet tekstu.";
+    }
+    if (empty($_POST['cena'])) {
+        $errorMessages[] = "Lūdzu ievietojiet cenu.";
+    }
+    if (empty($_POST['categories'])) {
+        $errorMessages[] = "Lūdzu izvēlieties kategorijas.";
     }
 
-    // Update query
-    $update_query = "UPDATE products SET virsraksts='$virsraksts', teksts='$teksts', cena='$cena', img_url='$img_url' WHERE product_id='$id'";
+    // Check if there are any errors
+    if (empty($errorMessages)) {
+        // Check if a new image file is uploaded
+        if (!empty($_FILES["Img_URL"]["name"])) {
+            // Handle image upload
+            $target_dir = "uploads/";
+            $target_file = $target_dir . basename($_FILES["Img_URL"]["name"]);
 
-    if (mysqli_query($conn, $update_query)) {
-        // Redirect user after updating record
-        header("Location: profile.php");
-        exit; // Make sure to stop script execution after sending the header
+            // Move the uploaded file to the target directory
+            if (move_uploaded_file($_FILES["Img_URL"]["tmp_name"], $target_file)) {
+                // Update database with new image path
+                $new_img_url = $target_file;
+                // Remove the old image file
+                if (!empty($data['img_url'])) {
+                    unlink($data['img_url']);
+                }
+            } else {
+                displayError("Sorry, there was an error uploading your file.");
+            }
+        } else {
+            // No new image file uploaded, retain the existing image path
+            $new_img_url = $_POST['current_img_url'];
+        }
+
+        // Update other fields in the database
+        $virsraksts = $_POST['virsraksts'];
+        $teksts = $_POST['teksts'];
+        $cena = $_POST['cena'];
+
+        // Prepare and execute the SQL statement to update the product
+        $stmt = $conn->prepare("UPDATE products SET virsraksts=?, teksts=?, img_url=?, cena=? WHERE product_id=?");
+        $stmt->bind_param("ssssi", $virsraksts, $teksts, $new_img_url, $cena, $id);
+
+        if ($stmt->execute()) {
+            // Update product categories
+            $stmt = $conn->prepare("DELETE FROM product_categories WHERE product_id=?");
+            $stmt->bind_param("i", $id);
+            $stmt->execute();
+
+            $categories = $_POST['categories'];
+            foreach ($categories as $category_id) {
+                $stmt = $conn->prepare("INSERT INTO product_categories (product_id, category_id) VALUES (?, ?)");
+                $stmt->bind_param("ii", $id, $category_id);
+                $stmt->execute();
+            }
+
+            echo "Produkts izlabots veiksmīgi.";
+        } else {
+            displayError("Error updating product: " . $stmt->error);
+        }
+        $stmt->close();
     } else {
-        echo "Error updating record: " . mysqli_error($conn);
+        // Display error messages for empty fields
+        foreach ($errorMessages as $errorMessage) {
+            echo displayError($errorMessage);
+        }
     }
 }
 ?>
@@ -87,9 +114,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <link rel="stylesheet" href="assets/style.css">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Edit</title>
+    <link rel="stylesheet" href="assets/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" integrity="sha384-z8Esh+4kymgcWTnF2ODFr/lF+2f1CRRfHxWZuT7g1PiV+Lly3Q2NwCJhY9P+dweA" crossorigin="anonymous">
+    <title>Edit Product</title>
 </head>
 <body>
     <div class="container-ievietot">
@@ -101,35 +130,53 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             <div class="teksts">
                 <form class="formievietot" method="post" enctype="multipart/form-data">
                     <div class="ievietotbox1">
-                        <label id="first">Visraksts</label>
-                        <input type="text" name="virsraksts" value="<?php echo $data['virsraksts']; ?>" required>
+                        <label id="first">Virsraksts</label>
+                        <input type="text" name="virsraksts" value="<?php echo htmlspecialchars($data['virsraksts']); ?>" >
                     </div>
                     
                     <div class="ievietotbox2">
                         <label id="first">Teksts</label>
-                        <input type="text" name="teksts" value="<?php echo $data['teksts']; ?>" required>
+                        <input type="text" name="teksts" value="<?php echo htmlspecialchars($data['teksts']); ?>" >
                     </div>
 
                     <div class="ievietotbox2">
                         <label id="first">Cena (€)</label>
-                        <input type="number" name="cena" value="<?php echo $data['cena']; ?>" required>
+                        <input type="number" name="cena" value="<?php echo htmlspecialchars($data['cena']); ?>" >
                     </div>
 
                     <div class="ievietotbox2">
-                        <label for="file">Choose an image:</label>
-                        <input type="file" name="Img_URL" id="file" accept="image/*">
+                        <label for="file">Izvēlies bildi:</label>
+                        <input type="file" name="Img_URL" id="file" accept="image/*" >
                         <?php if (!empty($data['img_url'])): ?>
                             <img src="<?php echo $data['img_url']; ?>" alt="Current Image" style="width: 100px; height: auto;">
+                            <input type="hidden" name="current_img_url" value="<?php echo $data['img_url']; ?>">
                         <?php endif; ?>
                     </div>
                     
                     <div class="ievietotbox2">
+                        <label for="categories">Izvēlies kategoriju:</label><br>
+                        <select name="categories[]" id="categories" multiple>
+                            <?php
+                            // Fetch categories from the database
+                            $sql = "SELECT * FROM categories";
+                            $result = $conn->query($sql);
+
+                            if ($result->num_rows > 0) {
+                                while ($row = $result->fetch_assoc()) {
+                                    $selected = in_array($row["category_id"], $selectedCategories) ? 'selected' : '';
+                                    echo '<option value="' . $row["category_id"] . '" ' . $selected . '>' . $row["name"] . '</option>';
+                                }
+                            } else {
+                                echo '<option value="">No categories found</option>';
+                            }
+                            ?>
+                        </select>
+                    </div>
+
+                    <div class="ievietotbox2">
                         <input id="insertbutton" type="submit" name="submit" value="Izlabot">
                     </div>
                 </form>
-                <?php if ($_SERVER["REQUEST_METHOD"] == "POST") {
-                    echo "Izlabots";
-                }?>
             </div>
         </div>
     </div>
