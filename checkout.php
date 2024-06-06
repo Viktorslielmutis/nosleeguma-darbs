@@ -27,7 +27,7 @@ if (isset($_GET['id']) && isset($_GET['cena']) && isset($_GET['virsraksts'])) {
 }
 
 // Define the base URL for your local environment (using default port 80)
-$base_url = "http://localhost/nosleeguma-darbs";
+$base_url = "https://lauris.kvd.lv/";
 
 // Construct full URLs
 $success_url = $base_url . "/checkout-success.php?status=success&id=$product_id&cena=$product_price&virsraksts=" . urlencode($product_name);
