@@ -49,7 +49,7 @@ if (isset($_GET['id'])) {
             <div class="Nosaukums"><?php echo $product['virsraksts']; ?></div>
             <div class="Apraksts-product-single"><?php echo $product['teksts']; ?></div>
             <div class="Cena"><?php echo $product['cena']; ?>€</div>
-            <button class="homebox1-poga">Pirkt</button>
+            <a href="checkout.php?id=<?php echo $product['product_id']; ?>&cena=<?php echo $product['cena']; ?>&virsraksts=<?php echo urlencode($product['virsraksts']); ?>" class="homebox1-poga">Pirkt</a>
         </div>
 </body>
 </html>

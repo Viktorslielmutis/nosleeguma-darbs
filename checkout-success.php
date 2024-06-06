@@ -62,7 +62,7 @@ $conn->close();
     
     <div class="checkout">
         <div class="checkout-teksts">
-            Sludinājums ir veiksmīgi nopirkts.
+            Prece ir veiksmīgi nopirkta.
         </div>
 
         <a href="home.php" class="checkout-poga">Atgriezties atpakaļ</a>
