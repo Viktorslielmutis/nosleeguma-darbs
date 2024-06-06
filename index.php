@@ -6,7 +6,7 @@ $sql = "SELECT * FROM categories";
 $result = $conn->query($sql);
 $categories = [];
 if ($result->num_rows > 0) {
-    while ($row = $result->fetch_assoc()) {
+    while($row = $result->fetch_assoc()) {
         $categories[] = $row;
     }
 }
@@ -25,16 +25,14 @@ $limit = 8; // Set the number of products you want to display per page
 // Calculate offset for pagination
 $offset = ($page - 1) * $limit;
 
-// Fetch products based on selected category and pagination
+// Fetch products based on selected category
 $sql = "SELECT p.* FROM products p
         INNER JOIN product_categories pc ON p.product_id = pc.product_id
-        $whereClause
-        ORDER BY p.product_id DESC
-        LIMIT $limit OFFSET $offset";
+        $whereClause";
 $result = $conn->query($sql);
 $products = [];
 if ($result->num_rows > 0) {
-    while ($row = $result->fetch_assoc()) {
+    while($row = $result->fetch_assoc()) {
         $products[] = $row;
     }
 }
@@ -49,6 +47,22 @@ $totalProducts = $row['total'];
 
 // Calculate total number of pages
 $totalPages = ceil($totalProducts / $limit);
+
+// Calculate offset for pagination
+$offset = ($page - 1) * $limit;
+
+// Fetch products based on selected category and pagination
+$sql = "SELECT p.* FROM products p
+        INNER JOIN product_categories pc ON p.product_id = pc.product_id
+        $whereClause
+        LIMIT $limit OFFSET $offset";
+$result = $conn->query($sql);
+$products = [];
+if ($result->num_rows > 0) {
+    while($row = $result->fetch_assoc()) {
+        $products[] = $row;
+    }
+}
 
 $conn->close();
 ?>
